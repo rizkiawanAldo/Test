@@ -57,7 +57,7 @@ var pokemonType = graphql.NewObject(
 )
 var dataType = graphql.NewObject(
 	graphql.ObjectConfig{
-		Name: "data",
+		Name: "region",
 		Fields: graphql.Fields{
 
 			"name": &graphql.Field{
@@ -74,10 +74,20 @@ var queryType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Query",
 		Fields: graphql.Fields{
-			"data": &graphql.Field{
+			"kanto": &graphql.Field{
 				Type: dataType,
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					resp, err := hitAPI()
+					resp, err := hitAPI("kanto")
+					if err != nil {
+						return nil, err
+					}
+					return resp, nil
+				},
+			},
+			"hoenn": &graphql.Field{
+				Type: dataType,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					resp, err := hitAPI("hoenn")
 					if err != nil {
 						return nil, err
 					}
@@ -115,8 +125,8 @@ func main() {
 }
 
 //Helper function to import json from file to map
-func hitAPI() (resp Response, err error) {
-	response, err := http.Get("http://pokeapi.co/api/v2/pokedex/kanto/")
+func hitAPI(region string) (resp Response, err error) {
+	response, err := http.Get(fmt.Sprintf("http://pokeapi.co/api/v2/pokedex/%s/", region))
 	if err != nil {
 		fmt.Print(err.Error())
 		return resp, err
