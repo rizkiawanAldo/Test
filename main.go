@@ -49,6 +49,9 @@ var pokemonType = graphql.NewObject(
 			"entry_number": &graphql.Field{
 				Type: graphql.Int,
 			},
+			"pokemon_species": &graphql.Field{
+				Type: speciesType,
+			},
 		},
 	},
 )
