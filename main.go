@@ -9,126 +9,10 @@ import (
 	"github.com/graphql-go/graphql"
 )
 
-// A Response struct to map the Entire Response
-type Response struct {
-	Id           int            `json:"id"`
-	Name         string         `json:"name"`
-	Pokemon      []Pokemon      `json:"pokemon_entries"`
-	IsMainSeries bool           `json:"is_main_series"`
-	VersionGroup []VersionGroup `json:"version_groups"`
-}
-
-// A Pokemon Struct to map every pokemon to.
-type Pokemon struct {
-	EntryNo int            `json:"entry_number"`
-	Species PokemonSpecies `json:"pokemon_species"`
-}
-
-// A struct to map our Pokemon's Species which includes it's name
-type PokemonSpecies struct {
-	Name string `json:"name"`
-}
-type VersionGroup struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}
-
-var versionGroupType = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "version_groups",
-		// we define the name and the fields of our
-		// object. In this case, we have one solitary
-		// field that is of type string
-		Fields: graphql.Fields{
-			"name": &graphql.Field{
-				Type: graphql.String,
-			},
-			"url": &graphql.Field{
-				Type: graphql.String,
-			},
-		},
-	},
-)
-var speciesType = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "pokemon_species",
-		// we define the name and the fields of our
-		// object. In this case, we have one solitary
-		// field that is of type string
-		Fields: graphql.Fields{
-			"name": &graphql.Field{
-				Type: graphql.String,
-			},
-		},
-	},
-)
-var pokemonType = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "pokemon",
-		// we define the name and the fields of our
-		// object. In this case, we have one solitary
-		// field that is of type string
-		Fields: graphql.Fields{
-			"entry_number": &graphql.Field{
-				Type: graphql.Int,
-			},
-			"pokemon_species": &graphql.Field{
-				Type: speciesType,
-			},
-		},
-	},
-)
-var dataType = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "region",
-		Fields: graphql.Fields{
-
-			"name": &graphql.Field{
-				Type: graphql.String,
-			},
-			"pokemon": &graphql.Field{
-				Type: graphql.NewList(pokemonType),
-			},
-			"is_main_series": &graphql.Field{
-				Type: graphql.Boolean,
-			},
-			"version_groups": &graphql.Field{
-				Type: graphql.NewList(versionGroupType),
-			},
-		},
-	},
-)
-
-var queryType = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "Query",
-		Fields: graphql.Fields{
-			"kanto": &graphql.Field{
-				Type: dataType,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					resp, err := hitAPI("kanto")
-					if err != nil {
-						return nil, err
-					}
-					return resp, nil
-				},
-			},
-			"hoenn": &graphql.Field{
-				Type: dataType,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					resp, err := hitAPI("hoenn")
-					if err != nil {
-						return nil, err
-					}
-					return resp, nil
-				},
-			},
-		},
-	})
-
 var schema, _ = graphql.NewSchema(
 	graphql.SchemaConfig{
-		Query: queryType,
+		Query:    queryType,
+		Mutation: mutationType,
 	},
 )
 
@@ -153,9 +37,10 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
-//Helper function to import json from file to map
-func hitAPI(region string) (resp Response, err error) {
-	response, err := http.Get(fmt.Sprintf("http://pokeapi.co/api/v2/pokedex/%s/", region))
+func hitAPI(region string, param string) (resp Response, err error) {
+
+	url := fmt.Sprintf("http://pokeapi.co/api/v2/pokedex/%s/%s", region, param)
+	response, err := http.Get(url)
 	if err != nil {
 		fmt.Print(err.Error())
 		return resp, err
@@ -165,7 +50,7 @@ func hitAPI(region string) (resp Response, err error) {
 		fmt.Print(err.Error())
 		return resp, err
 	}
-	fmt.Println(string(responseData))
 	_ = json.Unmarshal(responseData, &resp)
+	resp.URLHit = url
 	return
 }
