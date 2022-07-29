@@ -11,8 +11,11 @@ import (
 
 // A Response struct to map the Entire Response
 type Response struct {
-	Name    string    `json:"name"`
-	Pokemon []Pokemon `json:"pokemon_entries"`
+	Id           int            `json:"id"`
+	Name         string         `json:"name"`
+	Pokemon      []Pokemon      `json:"pokemon_entries"`
+	IsMainSeries bool           `json:"is_main_series"`
+	VersionGroup []VersionGroup `json:"version_groups"`
 }
 
 // A Pokemon Struct to map every pokemon to.
@@ -25,7 +28,27 @@ type Pokemon struct {
 type PokemonSpecies struct {
 	Name string `json:"name"`
 }
+type VersionGroup struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
 
+var versionGroupType = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "version_groups",
+		// we define the name and the fields of our
+		// object. In this case, we have one solitary
+		// field that is of type string
+		Fields: graphql.Fields{
+			"name": &graphql.Field{
+				Type: graphql.String,
+			},
+			"url": &graphql.Field{
+				Type: graphql.String,
+			},
+		},
+	},
+)
 var speciesType = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "pokemon_species",
@@ -65,6 +88,12 @@ var dataType = graphql.NewObject(
 			},
 			"pokemon": &graphql.Field{
 				Type: graphql.NewList(pokemonType),
+			},
+			"is_main_series": &graphql.Field{
+				Type: graphql.Boolean,
+			},
+			"version_groups": &graphql.Field{
+				Type: graphql.NewList(versionGroupType),
 			},
 		},
 	},
